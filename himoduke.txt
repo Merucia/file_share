@@ -1,0 +1,63 @@
+def _link_master_data(target_df, master_df, key_columns, how='left'):
+    """
+    Description:
+        対象のデータフレームにマスターデータを紐付ける
+        複数列をキーとして結合を行うことを想定
+
+    Args:
+        target_df (DataFrame): 紐付け対象のデータ（トランザクション等）
+        master_df (DataFrame): マスターデータ
+        key_columns (list): 結合キーとなるカラム名のリスト（両方のDFに存在すること）
+        how (str): 結合方法 (デフォルトは 'left')
+
+    Returns:
+        DataFrame: 紐付け後のデータフレーム
+
+    Raises:
+        KeyError: 指定されたキーカラムが存在しない場合
+        Exception: 結合時のその他のエラー
+
+    Examples:
+        >>> df_result = _link_master_data(df_main, df_master, ['拠点コード', '日付'])
+
+    Version:
+        v1.0 (2026/01/21) [YourName] 新規作成
+    """
+    
+    ### -----------------------------------------------------------
+    ### キーの存在確認
+    ### -----------------------------------------------------------
+    print_timestamp("マスター紐付け処理を開始します")
+    
+    # target_df のキーチェック
+    if not _verify_keys(target_df, key_columns, "Target(紐付け元)"):
+        raise KeyError(f"対象データにキーが存在しません: {key_columns}")
+
+    # master_df のキーチェック
+    if not _verify_keys(master_df, key_columns, "Master(紐付け先)"):
+        raise KeyError(f"マスターデータにキーが存在しません: {key_columns}")
+
+    ### -----------------------------------------------------------
+    ### マージ（紐付け）の実行
+    ### -----------------------------------------------------------
+    try:
+        print_timestamp(f"以下のキーでマスターを結合中: {key_columns}")
+        
+        # 複数キーでのマージ
+        # suffixesを設定して、同名カラムが重複した場合の判別をしやすくする
+        linked_data = pd.merge(
+            target_df, 
+            master_df, 
+            on=key_columns, 
+            how=how, 
+            suffixes=('', '_master')
+        )
+        
+        # データ量の確認ログを出力
+        _log_data_information(linked_data, "紐付け後データ")
+        
+        print_timestamp("マスター紐付け完了")
+        return linked_data
+
+    except Exception as e:
+        raise Exception(f"マスター紐付け中にエラーが発生しました: {e}")

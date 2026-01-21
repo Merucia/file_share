@@ -1,0 +1,66 @@
+def main(args):
+    """
+    Description:
+        メイン処理
+        設定ファイル(merge_info.xlsx)に基づき、マージ処理およびマスター紐付け処理を順次実行する
+
+    Args:
+        args (void): バッチ/シェル実行時の引数
+
+    Returns:
+        int: 終了コード (0: 正常, 1: 異常)
+
+    Raises:
+        なし
+
+    Examples:
+        >>> ret = Main.main(args)
+
+    Version:
+        v1.1 (2026/01/21) [YourName] 処理ロジックを別関数へ分離し整理
+        v1.0 (yyyy/mm/dd) [Shintaro1.Sakurai] 新規追加
+    """
+    # 実行環境の確認
+    print_timestamp('実行環境 ')
+    print("  interpreter path > {}".format(sys.executable))
+    print("  python version   > {}".format(sys.version))
+
+    # テスト
+    print_timestamp('テスト開始！')
+    
+    try:
+        print_timestamp("メイン関数を開始します")
+
+        ### -----------------------------------------------------------
+        ### 設定ファイルの読み込み
+        ### -----------------------------------------------------------
+        excel_info_path = os.path.join(DATA_FOLDER, 'merge_info.xlsx')
+        print_timestamp(f"Excelファイルを読み込み中 : {excel_info_path}")
+        
+        # 接続先情報とマージルールを取得
+        connection_info = _read_excel_info(excel_info_path, '接続先情報')
+        merge_rules = _read_excel_info(excel_info_path, 'マージルール')
+
+        ### -----------------------------------------------------------
+        ### マージルールの順次実行 (1-1 機能)
+        ### -----------------------------------------------------------
+        for index, row in merge_rules.iterrows():
+            print_timestamp(f"{index + 1}番目のマージルールを処理中")
+            
+            # ルール単位の処理を関数へ委譲
+            _process_single_merge_task(row, connection_info)
+
+        ### -----------------------------------------------------------
+        ### マスター紐付け処理 (1-2 新規機能)
+        ### -----------------------------------------------------------
+        # ※必要に応じて、マージルールと同様に設定ファイルからループで回す実装も可能です。
+        #   ここでは例として、特定の処理を呼び出すイメージで記述します。
+        # _process_master_linking_task(target_info, master_info, keys)
+
+        print_timestamp("メイン関数を終了します")
+        return 0
+
+    except Exception as e:
+        # エラーメッセージを表示
+        show_error_msg(f'※※ エラー発生: {e} ※※', 2)
+        return 1
